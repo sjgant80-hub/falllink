@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FallLink · reusable P2P library for the estate</title>
+<meta name="description" content="Persistent P2P library · WebRTC + STUN + BroadcastChannel + manual signaling · one connection layer every estate tool imports.">
+<meta name="author" content="AI-Native Solutions">
+<meta name="theme-color" content="#1a1a1e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231a1a1e'/%3E%3Ctext x='16' y='22' font-family='serif' font-size='18' fill='%237a9c7e' text-anchor='middle'%3E%E2%97%8A%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--void:#1a1a1e;--deep:#212127;--surface:#2a2a30;--raised:#33333a;--line:rgba(232,228,219,0.08);--line2:rgba(232,228,219,0.16);--text:#e8e4db;--muted:#928d80;--dim:#6b6660;--sage:#7a9c7e;--sage-dim:rgba(122,156,126,0.14);--sage-glow:rgba(122,156,126,0.35);--amber:#d4a052;--amber-dim:rgba(212,160,82,0.12);--coral:#d67a5a;--coral-glow:rgba(214,122,90,0.15);--serif:'Cormorant Garamond','Iowan Old Style',Georgia,serif;--sans:'Inter',-apple-system,system-ui,sans-serif;--mono:'JetBrains Mono','IBM Plex Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--void);color:var(--text);font-family:var(--sans);font-size:15.5px;line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none;outline:none;color:inherit}
+input,textarea{font-family:inherit;background:transparent;color:var(--text);border:none;outline:none;width:100%}
+h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--text);line-height:1.2}
+h1{font-size:34px;letter-spacing:0.01em;margin-bottom:8px}
+h1 em{color:var(--sage);font-style:italic}
+h2{font-size:22px;color:var(--text);margin-bottom:10px}
+h2 em{color:var(--sage);font-style:italic}
+h3{font-size:15px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.14em;font-family:var(--mono);font-weight:500}
+.app{display:grid;grid-template-rows:auto 1fr;min-height:100vh}
+.topbar{background:rgba(26,26,30,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;flex-wrap:wrap;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:22px;color:var(--text)}
+.brand .glyph{color:var(--sage);font-size:22px}
+.brand .co{color:var(--dim);font-family:var(--mono);font-size:9.5px;letter-spacing:0.16em;margin-left:6px;text-transform:uppercase}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{background:transparent;color:var(--muted);padding:8px 16px;border-radius:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.on{background:var(--sage-dim);color:var(--sage)}
+main{padding:24px;max-width:1080px;margin:0 auto;width:100%}
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
+@media(max-width:820px){.hero{grid-template-columns:1fr}}
+.card{background:var(--deep);border:1px solid var(--line);border-radius:14px;padding:24px 26px;margin-bottom:18px}
+.card .hint{color:var(--muted);font-size:12.5px;font-style:italic;margin-top:10px;line-height:1.55}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.stat{background:var(--surface);border-radius:10px;padding:14px 16px;border-left:2px solid var(--line2)}
+.stat.sage{border-left-color:var(--sage)}
+.stat.amber{border-left-color:var(--amber)}
+.stat .label{color:var(--muted);font-family:var(--mono);font-size:9.5px;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:6px}
+.stat .val{font-family:var(--serif);font-size:26px;font-style:italic;color:var(--text);line-height:1.1}
+.stat .val.small{font-size:13px;font-family:var(--mono);font-style:normal;letter-spacing:0.04em;word-break:break-all}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.big-btn{background:var(--sage);color:var(--void);padding:12px 22px;border-radius:10px;font-family:var(--mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700}
+.big-btn:hover{background:#8db091}
+.big-btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line2)}
+.big-btn.ghost:hover{border-color:var(--sage);color:var(--sage)}
+.big-btn.amber{background:var(--amber);color:var(--void)}
+.big-btn.amber:hover{background:#e5b268}
+.big-btn:disabled{opacity:0.4;cursor:not-allowed}
+.peer-list{display:flex;flex-direction:column;gap:8px}
+.peer{background:var(--surface);border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:auto 1fr auto auto auto;gap:14px;align-items:center;border-left:2px solid var(--line2)}
+.peer.connected{border-left-color:var(--sage)}
+.peer.connecting{border-left-color:var(--amber)}
+.peer.failed{border-left-color:var(--coral)}
+.peer .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.peer.connected .dot{background:var(--sage);box-shadow:0 0 8px var(--sage-glow)}
+.peer.connecting .dot{background:var(--amber);animation:blink 1s infinite}
+.peer.failed .dot{background:var(--coral)}
+@keyframes blink{50%{opacity:0.3}}
+.peer .id{font-family:var(--mono);font-size:12px;color:var(--text);letter-spacing:0.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.peer .id .short{color:var(--sage)}
+.peer .state{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase}
+.peer .latency{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.peer .latency.good{color:var(--sage)}
+.peer .latency.mid{color:var(--amber)}
+.peer .latency.bad{color:var(--coral)}
+.peer .kick{background:transparent;color:var(--muted);border:1px solid var(--line2);padding:4px 8px;border-radius:6px;font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase}
+.peer .kick:hover{color:var(--coral);border-color:var(--coral)}
+.empty{padding:32px 20px;text-align:center;color:var(--muted);font-style:italic;font-family:var(--serif);font-size:16px}
+.signal-box{background:var(--surface);border:1px dashed var(--line2);border-radius:10px;padding:16px;margin-top:14px}
+.signal-box textarea{background:var(--void);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-height:80px;font-family:var(--mono);font-size:10.5px;color:var(--text);resize:vertical;margin-bottom:8px}
+.signal-box .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.small-btn{background:var(--surface);color:var(--text);border:1px solid var(--line2);padding:7px 12px;border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase}
+.small-btn:hover{border-color:var(--sage);color:var(--sage)}
+.small-btn.primary{background:var(--sage);color:var(--void);border-color:var(--sage)}
+.small-btn.primary:hover{background:#8db091}
+.log{background:var(--surface);border-radius:10px;padding:14px 16px;max-height:260px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.6}
+.log .l{color:var(--muted);padding:2px 0}
+.log .l .t{color:var(--dim);margin-right:8px}
+.log .l.info .m{color:var(--text)}
+.log .l.sage .m{color:var(--sage)}
+.log .l.amber .m{color:var(--amber)}
+.log .l.coral .m{color:var(--coral)}
+.notice{background:var(--amber-dim);border-left:3px solid var(--amber);padding:12px 16px;border-radius:6px;color:var(--text);font-size:13px;margin:14px 0}
+.notice strong{color:var(--amber)}
+.notice.sage{background:var(--sage-dim);border-left-color:var(--sage)}
+.notice.sage strong{color:var(--sage)}
+.pill{display:inline-block;padding:3px 10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:var(--muted)}
+.pill.on{background:var(--sage-dim);color:var(--sage);border-color:var(--sage)}
+details{margin-top:12px}
+details summary{cursor:pointer;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;padding:8px 0}
+details summary:hover{color:var(--sage)}
+details[open] summary{color:var(--sage)}
+pre.code{background:var(--void);border:1px solid var(--line);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:11.5px;color:var(--text);overflow-x:auto;line-height:1.55}
+pre.code .k{color:var(--amber)}
+pre.code .s{color:var(--sage)}
+pre.code .c{color:var(--dim);font-style:italic}
+footer{padding:20px;text-align:center;color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:0.14em}
+footer .glyph{color:var(--sage)}
+.msg-input{display:flex;gap:8px;margin-top:12px}
+.msg-input input{background:var(--void);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-family:var(--mono);font-size:12px}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+<div class="brand"><span class="glyph">◊</span> FallLink <span class="co">AI-Native Solutions · v1</span></div>
+<nav class="tabs">
+<button class="tab on" data-view="dashboard">Dashboard</button>
+<button class="tab" data-view="peers">Peers</button>
+<button class="tab" data-view="signal">Signal</button>
+<button class="tab" data-view="import">Import</button>
+</nav>
+</header>
+<main>
+
+<section class="view on" id="view-dashboard">
+<h1>Persistent <em>P2P</em> for the estate</h1>
+<p style="color:var(--muted);margin-bottom:22px">Reusable WebRTC peer-discovery + connection layer. STUN NAT traversal · BroadcastChannel same-origin auto-discovery · manual offer/answer paste for cross-network. One connection layer every estate tool imports.</p>
+
+<div class="hero">
+<div class="card">
+<h3>Node state</h3>
+<div class="stats-grid">
+<div class="stat sage"><div class="label">Own ID</div><div class="val small" id="stat-own">—</div></div>
+<div class="stat amber"><div class="label">Signal channel</div><div class="val small" id="stat-channel">fall-signal</div></div>
+<div class="stat"><div class="label">Connected</div><div class="val" id="stat-connected">0</div></div>
+<div class="stat"><div class="label">Broadcasting</div><div class="val" id="stat-broadcast">off</div></div>
+</div>
+<div class="notice sage" style="margin-top:16px"><strong>Sovereign.</strong> No signalling server. Public STUN only. All state lives in this browser. <span class="pill on" id="pill-live">idle</span></div>
+</div>
+<div class="card">
+<h3>Activity</h3>
+<div class="log" id="log"></div>
+<div class="msg-input">
+<input id="broadcast-msg" placeholder="Broadcast a message to all peers…">
+<button class="small-btn primary" id="btn-send-msg">Send</button>
+</div>
+</div>
+</div>
+
+<div class="actions">
+<button class="big-btn" id="btn-broadcast">▸ Start same-origin broadcast</button>
+<button class="big-btn ghost" id="btn-create-offer">Create invite (cross-net)</button>
+<button class="big-btn amber" id="btn-ping-all">Ping all peers</button>
+</div>
+
+<div class="card">
+<h3>Usage · one-liner</h3>
+<pre class="code"><span class="c">// import the library</span>
+<span class="k">import</span> { FallLink } <span class="k">from</span> <span class="s">'./falllink.js'</span>;
+
+<span class="c">// instantiate with sensible defaults (Google + Cloudflare STUN, 'fall-signal' channel)</span>
+<span class="k">const</span> link = <span class="k">new</span> FallLink({ ownId: <span class="s">'my-node'</span> });
+
+<span class="c">// auto-discover peers on the same origin</span>
+link.startBroadcast();
+
+<span class="c">// listen for peers + messages</span>
+link.on(<span class="s">'peer'</span>, ({ peerId }) =&gt; console.log(<span class="s">'peer up'</span>, peerId));
+link.on(<span class="s">'message'</span>, ({ peerId, data }) =&gt; console.log(peerId, data));
+
+<span class="c">// broadcast to all connected peers</span>
+link.broadcast({ type: <span class="s">'hello'</span>, from: <span class="s">'me'</span> });</pre>
+</div>
+</section>
+
+<section class="view" id="view-peers">
+<h2><em>Connected peers</em></h2>
+<p style="color:var(--muted);margin-bottom:20px">Every connection is a live WebRTC data channel. Latency measured via ping every three seconds.</p>
+<div class="peer-list" id="peer-list"></div>
+</section>
+
+<section class="view" id="view-signal">
+<h2><em>Signal exchange</em></h2>
+<p style="color:var(--muted);margin-bottom:20px">Two paths: same-origin via BroadcastChannel (automatic) or cross-network via copy/paste of offer + answer bundles.</p>
+
+<div class="card">
+<h3>Same-origin (auto)</h3>
+<p style="color:var(--muted);font-size:13.5px;margin-bottom:10px">Open this page in another tab on the same device. Peers find each other on the <code style="color:var(--amber)">fall-signal</code> BroadcastChannel automatically.</p>
+<button class="big-btn" id="btn-broadcast-2">Start broadcasting</button> <span class="pill" id="pill-broadcast">off</span>
+</div>
+
+<div class="card">
+<h3>Cross-network · Alice creates an offer</h3>
+<div class="signal-box">
+<button class="small-btn primary" id="btn-mk-offer">Create offer bundle</button>
+<textarea id="offer-out" readonly placeholder="Offer bundle will appear here…"></textarea>
+<div class="row"><button class="small-btn" id="btn-copy-offer">Copy offer</button></div>
+<textarea id="answer-in" placeholder="Paste Bob's answer bundle here…"></textarea>
+<div class="row"><button class="small-btn primary" id="btn-apply-answer">Apply answer</button></div>
+</div>
+</div>
+
+<div class="card">
+<h3>Cross-network · Bob accepts an offer</h3>
+<div class="signal-box">
+<textarea id="offer-in" placeholder="Paste Alice's offer bundle here…"></textarea>
+<div class="row"><button class="small-btn primary" id="btn-mk-answer">Generate answer</button></div>
+<textarea id="answer-out" readonly placeholder="Answer bundle will appear here…"></textarea>
+<div class="row"><button class="small-btn" id="btn-copy-answer">Copy answer</button></div>
+</div>
+</div>
+
+<div class="notice"><strong>ICE gathering.</strong> After creating a bundle, wait for ICE candidates to be gathered (button will say "Ready"). The bundle is base64-encoded JSON containing SDP + ICE.</div>
+</section>
+
+<section class="view" id="view-import">
+<h2><em>Import into your tool</em></h2>
+<div class="card">
+<h3>Drop-in ESM</h3>
+<pre class="code"><span class="k">import</span> { FallLink } <span class="k">from</span> <span class="s">'https://sjgant80-hub.github.io/falllink/falllink.js'</span>;
+
+<span class="c">// or vendor it into your repo:</span>
+<span class="c">// curl -O https://sjgant80-hub.github.io/falllink/falllink.js</span>
+
+<span class="k">const</span> link = <span class="k">new</span> FallLink({
+  ownId: crypto.randomUUID(),
+  stunServers: [{ urls: <span class="s">'stun:stun.l.google.com:19302'</span> }],
+  bootstrapPeers: [],
+  signalChannel: <span class="s">'fall-signal'</span>
+});</pre>
+</div>
+<div class="card">
+<h3>API surface</h3>
+<pre class="code"><span class="c">// discovery</span>
+link.startBroadcast() <span class="c">// same-origin auto-discovery via BroadcastChannel</span>
+link.stopBroadcast()
+
+<span class="c">// manual signaling (cross-network paste)</span>
+<span class="k">const</span> { bundle, peerId, wrapper } = <span class="k">await</span> link.createOffer();
+<span class="k">const</span> { bundle } = <span class="k">await</span> link.acceptOffer(offerBundle);
+<span class="k">await</span> link.acceptAnswer(answerBundle);
+
+<span class="c">// direct control</span>
+<span class="k">const</span> wrapper = <span class="k">await</span> link.connect(peerId, offer?);
+link.broadcast(msg) <span class="c">// -&gt; number of peers reached</span>
+link.getPeers() <span class="c">// -&gt; [{ peerId, state, latency, ... }]</span>
+<span class="k">await</span> link.ping(peerId) <span class="c">// -&gt; latency ms</span>
+link.destroy()
+
+<span class="c">// events</span>
+link.on(<span class="s">'peer'</span>, ({ peerId, wrapper }) =&gt; {})
+link.on(<span class="s">'message'</span>, ({ peerId, data }) =&gt; {})
+link.on(<span class="s">'disconnect'</span>, ({ peerId }) =&gt; {})
+link.on(<span class="s">'latency'</span>, ({ peerId, latency }) =&gt; {})</pre>
+</div>
+</section>
+
+</main>
+</div>
+
+<footer>◊ FallLink · MIT · AI-Native Solutions 2026 · <a href="README.md" style="color:var(--sage)">README</a> · <a href="falllink.js" style="color:var(--sage)">falllink.js</a></footer>
+
+<script type="module">
+import { FallLink } from './falllink.js';
+
+const ownId = 'demo-' + Math.random().toString(36).slice(2, 8);
+const link = new FallLink({ ownId });
+window.link = link; // for console poking
+
+function log(msg, kind='info') {
+  const el = document.getElementById('log');
+  const t = new Date().toLocaleTimeString('en-GB', { hour12: false });
+  const div = document.createElement('div');
+  div.className = 'l ' + kind;
+  div.innerHTML = `<span class="t">${t}</span><span class="m">${escapeHtml(msg)}</span>`;
+  el.insertBefore(div, el.firstChild);
+  while (el.children.length > 80) el.removeChild(el.lastChild);
+}
+function escapeHtml(s) { return String(s||'').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'})[c]); }
+function shortId(id) { return String(id || '').slice(0, 10); }
+
+function renderAll() {
+  const peers = link.getPeers();
+  const connected = peers.filter(p => p.state === 'connected').length;
+  document.getElementById('stat-connected').textContent = connected;
+  document.getElementById('stat-own').textContent = ownId;
+  document.getElementById('stat-channel').textContent = link.signalChannel;
+  document.getElementById('stat-broadcast').textContent = link._broadcasting ? 'live' : 'off';
+  document.getElementById('pill-live').textContent = link._broadcasting ? 'live · ' + link.signalChannel : 'idle';
+  document.getElementById('pill-live').classList.toggle('on', link._broadcasting);
+  document.getElementById('pill-broadcast').textContent = link._broadcasting ? 'live' : 'off';
+  document.getElementById('pill-broadcast').classList.toggle('on', link._broadcasting);
+  const b1 = document.getElementById('btn-broadcast');
+  const b2 = document.getElementById('btn-broadcast-2');
+  b1.textContent = link._broadcasting ? 'Broadcasting…' : '▸ Start same-origin broadcast';
+  b2.textContent = link._broadcasting ? 'Broadcasting…' : 'Start broadcasting';
+
+  const el = document.getElementById('peer-list');
+  if (!peers.length) {
+    el.innerHTML = '<div class="empty">No peers yet. Open another tab and click "Start broadcasting" on both.</div>';
+    return;
+  }
+  el.innerHTML = peers.map(p => {
+    const lat = p.latency == null ? '—' : p.latency + 'ms';
+    const latCls = p.latency == null ? '' : (p.latency < 60 ? 'good' : p.latency < 180 ? 'mid' : 'bad');
+    return `<div class="peer ${p.state}">
+      <span class="dot"></span>
+      <span class="id"><span class="short">${escapeHtml(shortId(p.peerId))}</span>${escapeHtml((p.peerId||'').slice(10))}</span>
+      <span class="state">${escapeHtml(p.state)}</span>
+      <span class="latency ${latCls}">${escapeHtml(lat)}</span>
+      <button class="kick" data-id="${escapeHtml(p.peerId)}">Kick</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.kick').forEach(b => b.onclick = () => {
+    const w = link.peers.get(b.dataset.id);
+    if (w) { w.close(); log('Kicked ' + shortId(b.dataset.id), 'amber'); renderAll(); }
+  });
+}
+
+// tabs
+document.querySelectorAll('.tab').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('.view').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+    document.getElementById('view-' + t.dataset.view).classList.add('on');
+  };
+});
+
+// events
+link.on('peer', ({ peerId }) => { log('Peer up · ' + shortId(peerId), 'sage'); renderAll(); });
+link.on('message', ({ peerId, data }) => {
+  const preview = typeof data === 'string' ? data : JSON.stringify(data);
+  log('◊ ' + shortId(peerId) + ' → ' + preview.slice(0, 80), 'info');
+});
+link.on('disconnect', ({ peerId }) => { log('Disconnect · ' + shortId(peerId), 'coral'); renderAll(); });
+link.on('latency', () => renderAll());
+link.on('broadcast', ({ on }) => { log('Broadcast ' + (on ? 'started' : 'stopped'), on ? 'sage' : 'amber'); renderAll(); });
+link.on('error', ({ where, error }) => log('Error · ' + where + ' · ' + error, 'coral'));
+
+// buttons
+document.getElementById('btn-broadcast').onclick = () => link.startBroadcast();
+document.getElementById('btn-broadcast-2').onclick = () => link.startBroadcast();
+document.getElementById('btn-create-offer').onclick = () => document.querySelector('.tab[data-view="signal"]').click();
+document.getElementById('btn-ping-all').onclick = async () => {
+  const peers = link.getPeers();
+  if (!peers.length) { log('No peers to ping', 'amber'); return; }
+  for (const p of peers) {
+    const lat = await link.ping(p.peerId);
+    log('Ping ' + shortId(p.peerId) + ' → ' + (lat == null ? 'timeout' : lat + 'ms'), lat == null ? 'coral' : 'sage');
+  }
+};
+document.getElementById('btn-send-msg').onclick = () => {
+  const inp = document.getElementById('broadcast-msg');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  const n = link.broadcast({ __app: 'falllink-demo', text: msg, from: ownId });
+  log('Broadcast → ' + n + ' peer(s): ' + msg, 'sage');
+  inp.value = '';
+};
+
+let pendingOfferPeerId = null;
+document.getElementById('btn-mk-offer').onclick = async () => {
+  const btn = document.getElementById('btn-mk-offer');
+  const ta = document.getElementById('offer-out');
+  btn.textContent = 'Gathering ICE…'; btn.disabled = true;
+  try {
+    const { bundle, peerId } = await link.createOffer();
+    pendingOfferPeerId = peerId;
+    ta.value = bundle;
+    btn.textContent = 'Ready · offer above'; btn.disabled = false;
+    log('Offer bundle created · share with peer', 'amber');
+  } catch (e) { btn.textContent = 'Create offer bundle'; btn.disabled = false; log('Offer failed: ' + e.message, 'coral'); }
+};
+document.getElementById('btn-apply-answer').onclick = async () => {
+  const raw = document.getElementById('answer-in').value.trim();
+  if (!raw) { alert('Paste an answer bundle first.'); return; }
+  try {
+    await link.acceptAnswer(raw);
+    log('Answer applied · handshake sealed', 'sage');
+  } catch (e) { alert('Bad answer: ' + e.message); }
+};
+document.getElementById('btn-mk-answer').onclick = async () => {
+  const raw = document.getElementById('offer-in').value.trim();
+  if (!raw) { alert('Paste an offer bundle first.'); return; }
+  const btn = document.getElementById('btn-mk-answer');
+  const outTa = document.getElementById('answer-out');
+  btn.textContent = 'Gathering ICE…'; btn.disabled = true;
+  try {
+    const { bundle } = await link.acceptOffer(raw);
+    outTa.value = bundle;
+    btn.textContent = 'Ready · answer above'; btn.disabled = false;
+    log('Answer bundle created · send back to inviter', 'amber');
+  } catch (e) { btn.textContent = 'Generate answer'; btn.disabled = false; alert('Bad offer: ' + e.message); }
+};
+document.getElementById('btn-copy-offer').onclick = () => {
+  const ta = document.getElementById('offer-out');
+  ta.select(); document.execCommand('copy'); log('Offer copied', 'sage');
+};
+document.getElementById('btn-copy-answer').onclick = () => {
+  const ta = document.getElementById('answer-out');
+  ta.select(); document.execCommand('copy'); log('Answer copied', 'sage');
+};
+
+log('FallLink demo ready · node ' + ownId, 'sage');
+log('Open a second tab and click Broadcast on both', 'amber');
+renderAll();
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
